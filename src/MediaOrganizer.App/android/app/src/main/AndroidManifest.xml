@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="Media Organizer"
+        android:label="Jellyniser"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">
@@ -26,7 +26,7 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Allows opening .torrent files with Media Organizer from a file manager
+            <!-- Allows opening .torrent files with Jellyniser from a file manager
                  or browser download notification. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
@@ -37,7 +37,7 @@
                 <data android:scheme="content"/>
                 <data android:scheme="file"/>
             </intent-filter>
-            <!-- Allows opening magnet links with Media Organizer from a browser
+            <!-- Allows opening magnet links with Jellyniser from a browser
                  or any app that shares a link. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>

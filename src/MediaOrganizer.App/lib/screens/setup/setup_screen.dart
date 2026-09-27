@@ -78,12 +78,12 @@ class _SetupScreenState extends State<SetupScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Media Organizer',
+                  'Jellyniser',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Enter the address of your MediaOrganizer API to get started.',
+                  'Enter the address of your Jellyniser API to get started.',
                   textAlign: TextAlign.center,
                   style: Theme.of(
                     context,

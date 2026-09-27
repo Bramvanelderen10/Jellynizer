@@ -319,7 +319,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Media Organizer'),
+        title: const Text('Jellyniser'),
         actions: [
           PopupMenuButton<_AppMenuAction>(
             tooltip: 'Menu',

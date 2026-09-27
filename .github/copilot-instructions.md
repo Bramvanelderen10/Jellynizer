@@ -1,4 +1,4 @@
-# MediaOrganizer
+# Jellyniser
 
 .NET 10 minimal API service that organizes video and subtitle files from a flat/messy source folder into a structured media library (movies and TV shows). The organize job runs **on demand only** (`POST /trigger-job`) — there is no scheduler. Exposes HTTP endpoints for on-demand triggering, file management, history management, torrent uploading, and health checks. Uses SQLite to track move history for idempotency. Includes a Flutter companion app.
 

@@ -10,16 +10,16 @@ import 'services/torrent_intent_service.dart';
 
 void main() {
   setupServiceLocator();
-  runApp(const MediaOrganizerApp());
+  runApp(const JellyniserApp());
 }
 
-class MediaOrganizerApp extends StatelessWidget {
-  const MediaOrganizerApp({super.key});
+class JellyniserApp extends StatelessWidget {
+  const JellyniserApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Media Organizer',
+      title: 'Jellyniser',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorSchemeSeed: Colors.deepPurple,

@@ -1,6 +1,6 @@
-# MediaOrganizer
+# Jellyniser
 
-MediaOrganizer is a .NET 10 minimal API service that organizes messy video folders into a clean movie/TV library layout which is supported by Jellyfin.
+Jellyniser is a .NET 10 minimal API service that organizes messy video folders into a clean movie/TV library layout which is supported by Jellyfin.
 
 It supports on-demand API triggers, subtitle companion moves, source cleanup, and idempotent move tracking using a SQLite move-history database.
 
@@ -29,7 +29,7 @@ It supports on-demand API triggers, subtitle companion moves, source cleanup, an
 
 ## Quick start (Docker)
 
-Runs MediaOrganizer together with qBittorrent so `.torrent` files and magnet links can be
+Runs Jellyniser together with qBittorrent so `.torrent` files and magnet links can be
 downloaded straight into your media folder.
 
 The important detail: **both services mount the same host folder at the same container path**
@@ -79,7 +79,7 @@ services:
       - TORRENTING_PORT=6881
     ports:
       # Exposes the WebUI on your LAN. Use "127.0.0.1:8488:8488" to keep it local
-      # (MediaOrganizer still reaches it over the compose network).
+      # (Jellyniser still reaches it over the compose network).
       - "8488:8488"
       - "6881:6881"
       - "6881:6881/udp"

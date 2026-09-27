@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:media_organizer_app/screens/torrent/torrents_screen.dart';
-import 'package:media_organizer_app/services/torrent_intent_service.dart';
+import 'package:jellyniser_app/screens/torrent/torrents_screen.dart';
+import 'package:jellyniser_app/services/torrent_intent_service.dart';
 
 void main() {
   group('TorrentIntentRequest', () {

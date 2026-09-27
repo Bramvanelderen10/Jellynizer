@@ -9,7 +9,7 @@ public static class SystemEndpoints
     {
         app.MapGet("/", () => Results.Ok(new
         {
-            message = "Media Organizer API",
+            message = "Jellyniser API",
             endpoints = new
             {
                 triggerJob = "POST /trigger-job",

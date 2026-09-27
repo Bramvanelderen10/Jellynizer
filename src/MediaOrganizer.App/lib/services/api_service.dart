@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'sse_client.dart';
 
-/// Communicates with the MediaOrganizer API.
+/// Communicates with the Jellyniser API.
 class ApiService {
   final String baseUrl;
 
@@ -324,7 +324,7 @@ class ApiException implements Exception {
 
     if (isNotFound) {
       return 'This server does not support this yet$suffix. '
-          'Update MediaOrganizer on the server to a newer version.';
+          'Update Jellyniser on the server to a newer version.';
     }
 
     if (isNotConfigured) {
