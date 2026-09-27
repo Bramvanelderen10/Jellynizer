@@ -2,13 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": ".NET Launch MediaOrganizer",
+      "name": ".NET Launch Jellyniser",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/src/MediaOrganizer/bin/Debug/net10.0/MediaOrganizer",
+      "program": "${workspaceFolder}/src/Jellyniser/bin/Debug/net10.0/Jellyniser",
       "args": [],
-      "cwd": "${workspaceFolder}/src/MediaOrganizer",
+      "cwd": "${workspaceFolder}/src/Jellyniser",
       "stopAtEntry": false,
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development"

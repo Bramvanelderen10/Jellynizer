@@ -2,12 +2,12 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy csproj and restore dependencies
-COPY src/MediaOrganizer/MediaOrganizer.csproj src/MediaOrganizer/
-RUN dotnet restore src/MediaOrganizer/MediaOrganizer.csproj
+COPY src/Jellyniser/Jellyniser.csproj src/Jellyniser/
+RUN dotnet restore src/Jellyniser/Jellyniser.csproj
 
 # Copy everything else and build
-COPY src/MediaOrganizer/ src/MediaOrganizer/
-RUN dotnet publish src/MediaOrganizer/MediaOrganizer.csproj -c Release -o /app/publish
+COPY src/Jellyniser/ src/Jellyniser/
+RUN dotnet publish src/Jellyniser/Jellyniser.csproj -c Release -o /app/publish
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
@@ -19,16 +19,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Install gosu for privilege de-escalation so that moved files are owned by
 # the host user (PUID/PGID) rather than root, preventing SMB lock-out.
-# ffmpeg + Intel VA-API drivers power the optional transcoding step (HEVC -> H.264).
-# i965-va-driver covers older Intel GPUs (Gen8 / 5th gen); intel-media-va-driver
-# covers Gen9 (Skylake) and newer. vainfo is handy for verifying GPU access.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        gosu \
-        ffmpeg \
-        intel-media-va-driver \
-        i965-va-driver \
-        vainfo \
+    && apt-get install -y --no-install-recommends gosu \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/publish .
@@ -38,4 +30,4 @@ RUN chmod +x /entrypoint.sh
 EXPOSE 45263
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["dotnet", "MediaOrganizer.dll"]
+CMD ["dotnet", "Jellyniser.dll"]

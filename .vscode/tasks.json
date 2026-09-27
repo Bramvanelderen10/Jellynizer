@@ -7,7 +7,7 @@
       "type": "process",
       "args": [
         "build",
-        "${workspaceFolder}/src/MediaOrganizer/MediaOrganizer.csproj",
+        "${workspaceFolder}/src/Jellyniser/Jellyniser.csproj",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary;ForceNoAlign"
       ],
@@ -22,7 +22,7 @@
         "watch",
         "run",
         "--project",
-        "${workspaceFolder}/src/MediaOrganizer/MediaOrganizer.csproj"
+        "${workspaceFolder}/src/Jellyniser/Jellyniser.csproj"
       ],
       "isBackground": true,
       "problemMatcher": "$msCompile"
