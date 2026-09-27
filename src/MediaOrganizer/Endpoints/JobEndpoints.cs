@@ -8,21 +8,13 @@ public static class JobEndpoints
     {
         app.MapPost("/trigger-job", async (JobExecutor jobExecutor, TriggerJobRequest? request) =>
         {
-            try
+            var result = await jobExecutor.ExecuteJobAsync(request?.FolderPath);
+            return Results.Ok(new
             {
-                var result = await jobExecutor.ExecuteJobAsync(request?.FolderPath);
-                return Results.Ok(new
-                {
-                    message = "Job triggered successfully",
-                    executedAt = DateTime.Now,
-                    result
-                });
-            }
-            catch (JobAlreadyRunningException ex)
-            {
-                return Results.Json(
-                    new { message = ex.Message }, statusCode: StatusCodes.Status409Conflict);
-            }
+                message = "Job triggered successfully",
+                executedAt = DateTime.Now,
+                result = result
+            });
         })
         .WithName("TriggerJob")
         .WithSummary("Triggers the media organization job immediately")

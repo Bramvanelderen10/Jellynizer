@@ -13,7 +13,6 @@ using MediaOrganizer.Orchestration;
 using MediaOrganizer.Parsing;
 using MediaOrganizer.Planning;
 using MediaOrganizer.Torrents;
-using MediaOrganizer.Transcoding;
 
 using Scalar.AspNetCore;
 
@@ -27,7 +26,6 @@ builder.WebHost.ConfigureKestrel(options =>
 
 // Add background service
 builder.Services.AddSingleton<JobExecutor>();
-builder.Services.AddSingleton<JobLock>();
 builder.Services.Configure<MediaOrganizerOptions>(builder.Configuration.GetSection("MediaOrganizer"));
 builder.Services.AddSingleton<IFileSystem, PhysicalFileSystem>();
 builder.Services.AddSingleton<VideoFileFinder>();
@@ -44,14 +42,6 @@ builder.Services.AddDbContextFactory<MoveHistoryDbContext>(options =>
 
 builder.Services.AddSingleton<MoveHistoryStore>();
 builder.Services.AddSingleton<MediaFileOrganizer>();
-
-// Transcoding: optional ffmpeg step that converts unsupported codecs (e.g. HEVC) to a
-// hardware-friendly one (H.264 via VA-API/Quick Sync, with a libx264 software fallback).
-builder.Services.AddSingleton<IProcessRunner, PhysicalProcessRunner>();
-builder.Services.AddSingleton<IVideoProbe, FfprobeVideoProbe>();
-builder.Services.AddSingleton<ITranscoder, FfmpegTranscoder>();
-builder.Services.AddSingleton<TranscodeService>();
-builder.Services.AddSingleton<TranscodeJobRunner>();
 
 // Torrents: accepts .torrent uploads and hands them to qBittorrent to download.
 builder.Services.AddHttpClient();
@@ -73,7 +63,6 @@ app.MapScalarApiReference(options =>
 app.MapGet("/scalar", () => Results.Redirect("/scalar/v1", permanent: false));
 
 app.MapJobEndpoints();
-app.MapTranscodeEndpoints();
 app.MapHistoryEndpoints();
 app.MapFileManagementEndpoints();
 app.MapSystemEndpoints();
