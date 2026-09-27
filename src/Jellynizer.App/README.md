@@ -105,22 +105,26 @@ python3 tool/generate_icon.py      # draws assets/icon/*.png (1024x1024)
 dart run flutter_launcher_icons    # writes android/ ios/ web/ icons
 ```
 
-`tool/generate_icon.py` draws a Jellyfin-style rounded "J" on a teal gradient with a purple
-puzzle-piece badge (the puzzle piece marks this as a companion/plugin app). It emits three
-sources:
+`tool/generate_icon.py` draws Jellyfin's own mark — the rounded triangle ring with a solid
+triangle inside — filled with Jellyfin's purple-to-blue gradient on Jellyfin's navy, plus a
+white puzzle-piece badge in the lower-right corner marking this as a companion/plugin app.
+The geometry is the path data from Jellyfin's own artwork
+([jellyfin/jellyfin-ux](https://github.com/jellyfin/jellyfin-ux), CC BY-SA 4.0), rasterised
+here at build time so the file stays plain Python. It emits three sources:
 
 | File | Purpose |
 |---|---|
-| `assets/icon/app_icon.png` | full icon, teal gradient, RGB with no alpha |
+| `assets/icon/app_icon.png` | full icon on navy, RGB with no alpha |
 | `assets/icon/app_icon_foreground.png` | Android adaptive foreground layer |
 | `assets/icon/app_icon_monochrome.png` | Android 13+ themed (monochrome) icon |
 
 `assets/icon/` is a build input only — it is deliberately **not** listed under `flutter: assets:`
 so it never ships inside the app bundle. The `flutter_launcher_icons` section in `pubspec.yaml`
-holds the paths and the `#00695C` background colour.
+holds the paths and the `#000B25` background colour. Only the Android icons are tracked; `ios/`
+and `web/` are gitignored.
 
 To change the icon, edit the constants at the top of `tool/generate_icon.py` (colours, mark
-fractions, badge size) and re-run both commands above.
+fractions, badge size and position) and re-run both commands above.
 
 ## Notes
 
