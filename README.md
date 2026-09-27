@@ -1,14 +1,14 @@
-# Jellyniser
+# Jellynizer
 
-Jellyniser is a .NET 10 minimal API service that organizes messy video folders into a clean movie/TV library layout which is supported by Jellyfin.
+Jellynizer is a .NET 10 minimal API service that organizes messy video folders into a clean movie/TV library layout which is supported by Jellyfin.
 
 It supports on-demand API triggers, subtitle companion moves, source cleanup, and idempotent move tracking using a SQLite move-history database.
 
 ## What this repository contains
 
-- `src/Jellyniser`: backend service (minimal API)
-- `src/Jellyniser.Tests`: unit tests for organizer components
-- `src/Jellyniser.App`: Flutter companion app (separate README)
+- `src/Jellynizer`: backend service (minimal API)
+- `src/Jellynizer.Tests`: unit tests for organizer components
+- `src/Jellynizer.App`: Flutter companion app (separate README)
 
 ## Features
 
@@ -29,7 +29,7 @@ It supports on-demand API triggers, subtitle companion moves, source cleanup, an
 
 ## Quick start (Docker)
 
-Runs Jellyniser together with qBittorrent so `.torrent` files and magnet links can be
+Runs Jellynizer together with qBittorrent so `.torrent` files and magnet links can be
 downloaded straight into your media folder.
 
 The important detail: **both services mount the same host folder at the same container path**
@@ -41,21 +41,21 @@ Replace `/media/bram/Expansion/Videos` with the host folder holding your videos.
 
 ```yaml
 services:
-  jellyniser:
+  jellynizer:
     image: ghcr.io/bramvanelderen10/mediaorganizer:0.0.13
-    container_name: jellyniser
+    container_name: jellynizer
     ports:
       - "45263:45263"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - TZ=Europe/Amsterdam
-      - Jellyniser__SourceFolder=/media
-      - Jellyniser__MoveHistoryDatabasePath=/data/move-history.db
+      - Jellynizer__SourceFolder=/media
+      - Jellynizer__MoveHistoryDatabasePath=/data/move-history.db
       # Torrent integration (see "Adding torrents" below)
-      - Jellyniser__Qbittorrent__Url=http://qbittorrent:8488
-      - Jellyniser__Qbittorrent__Username=admin
-      - Jellyniser__Qbittorrent__Password=your-webui-password
-      - Jellyniser__Qbittorrent__DownloadFolder=/media
+      - Jellynizer__Qbittorrent__Url=http://qbittorrent:8488
+      - Jellynizer__Qbittorrent__Username=admin
+      - Jellynizer__Qbittorrent__Password=your-webui-password
+      - Jellynizer__Qbittorrent__DownloadFolder=/media
       # Match PUID/PGID to the host user that owns your media files, otherwise moved
       # files end up root-owned and get locked over SMB. Run `id` on your host.
       - PUID=1000
@@ -79,12 +79,12 @@ services:
       - TORRENTING_PORT=6881
     ports:
       # Exposes the WebUI on your LAN. Use "127.0.0.1:8488:8488" to keep it local
-      # (Jellyniser still reaches it over the compose network).
+      # (Jellynizer still reaches it over the compose network).
       - "8488:8488"
       - "6881:6881"
       - "6881:6881/udp"
     volumes:
-      # MUST be identical to the jellyniser mount above.
+      # MUST be identical to the jellynizer mount above.
       - /media/bram/Expansion/Videos:/media
       - qbittorrent-config:/config
     restart: unless-stopped
@@ -104,7 +104,7 @@ curl http://localhost:45263/health
 docker compose logs qbittorrent
 ```
 
-Set that permanent password as `Jellyniser__Qbittorrent__Password`. If you skip this,
+Set that permanent password as `Jellynizer__Qbittorrent__Password`. If you skip this,
 qBittorrent generates a new password on every restart and the integration breaks.
 
 > Prefer your own scheduler? Drop the `qbittorrent` service and the `Qbittorrent` env vars.
@@ -289,7 +289,7 @@ Examples:
 
 ## Configuration
 
-Settings are under `Jellyniser` in `appsettings.json` or environment variables (`__` separator).
+Settings are under `Jellynizer` in `appsettings.json` or environment variables (`__` separator).
 
 | Key | Default | Description |
 |---|---|---|
@@ -307,7 +307,7 @@ Settings are under `Jellyniser` in `appsettings.json` or environment variables (
 | `Qbittorrent:RequestTimeoutSeconds` | `60` | Timeout for qBittorrent HTTP calls |
 
 **Docker-only environment variables** (handled by `entrypoint.sh`, not part of the
-`Jellyniser` config section):
+`Jellynizer` config section):
 
 | Variable | Default | Description |
 |---|---|---|
@@ -321,7 +321,7 @@ Example `appsettings.json` (the Docker example above uses environment variables 
 
 ```json
 {
-  "Jellyniser": {
+  "Jellynizer": {
     "SourceFolder": "/media",
     "MoveHistoryDatabasePath": "/data/move-history.db",
     "VideoExtensions": [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".m4v", ".webm", ".ts", ".mpg", ".mpeg"],
@@ -357,7 +357,7 @@ Prerequisite: [.NET 10 SDK](https://dotnet.microsoft.com/download)
 Run service:
 
 ```bash
-dotnet run --project src/Jellyniser/Jellyniser.csproj
+dotnet run --project src/Jellynizer/Jellynizer.csproj
 ```
 
 Run tests:
@@ -369,16 +369,16 @@ dotnet test
 Build:
 
 ```bash
-dotnet build src/Jellyniser/Jellyniser.csproj
+dotnet build src/Jellynizer/Jellynizer.csproj
 ```
 
 ## Repo layout
 
 ```text
 src/
-  Jellyniser/          # Backend service (minimal API)
-  Jellyniser.Tests/    # Unit tests
-  Jellyniser.App/      # Flutter companion app (mobile/desktop/web client)
+  Jellynizer/          # Backend service (minimal API)
+  Jellynizer.Tests/    # Unit tests
+  Jellynizer.App/      # Flutter companion app (mobile/desktop/web client)
 tools/
   mcreate/                 # CLI tool to recreate folder structures with empty files
 ```
@@ -391,8 +391,8 @@ tools/
 | Files skipped | Source path exists and extension lists are correct |
 | Duplicate names | Expected behavior; unique suffix is applied |
 | Moved files locked / can't delete via SMB | Container is running as root; set `PUID`/`PGID` to match the host user that owns your media files (run `id` on the host) |
-| Torrent endpoints return `503` | `Jellyniser__Qbittorrent__Url` is set and qBittorrent is reachable from the container |
-| Torrent endpoints return `502` | Check `docker compose logs jellyniser`; usually bad credentials or qBittorrent rejecting the torrent |
+| Torrent endpoints return `503` | `Jellynizer__Qbittorrent__Url` is set and qBittorrent is reachable from the container |
+| Torrent endpoints return `502` | Check `docker compose logs jellynizer`; usually bad credentials or qBittorrent rejecting the torrent |
 | qBittorrent login fails after a restart | The temporary password changed. Set a permanent one in **Tools → Options → WebUI → Authentication** and update `Qbittorrent__Password` |
 | Downloads land in the wrong place | `Qbittorrent__DownloadFolder` must be a path **qBittorrent** sees, and both services must mount the same host folder at the same container path |
 | An unfinished download disappeared | The organize job ran mid-download; see the warning under "Download folder" |

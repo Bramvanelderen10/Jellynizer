@@ -1,4 +1,4 @@
-# Jellyniser
+# Jellynizer
 
 .NET 10 minimal API service that organizes video and subtitle files from a flat/messy source folder into a structured media library (movies and TV shows). The organize job runs **on demand only** (`POST /trigger-job`) — there is no scheduler. Exposes HTTP endpoints for on-demand triggering, file management, history management, torrent uploading, and health checks. Uses SQLite to track move history for idempotency. Includes a Flutter companion app.
 
@@ -18,7 +18,7 @@
 - IHttpClientFactory / HttpClient (qBittorrent WebUI integration)
 - Docker (multi-stage build with gosu for privilege de-escalation)
 
-## Configuration (`Jellyniser` section)
+## Configuration (`Jellynizer` section)
 
 | Key | Type | Default | Description |
 |---|---|---|---|
@@ -213,7 +213,7 @@ Parent folder name is also parsed as a fallback source for the pattern. If the i
 
 | Pattern | Usage |
 |---|---|
-| Options pattern | `JellyniserOptions` bound from `Jellyniser` config section |
+| Options pattern | `JellynizerOptions` bound from `Jellynizer` config section |
 | DI / Singleton | All services registered as singletons |
 | `IDbContextFactory` | Thread-safe EF Core usage from singletons |
 | `IFileSystem` abstraction | All file operations go through `IFileSystem` for testability |
@@ -224,7 +224,7 @@ Parent folder name is also parsed as a fallback source for the pattern. If the i
 
 ## Testing
 
-Tests in `src/Jellyniser.Tests/` mock `IFileSystem` and `ITorrentClient` for isolated unit testing:
+Tests in `src/Jellynizer.Tests/` mock `IFileSystem` and `ITorrentClient` for isolated unit testing:
 - `DirectoryCleanerTests`, `MediaGrouperTests`, `MovePlanBuilderTests`
 - `PathHelpersTests`, `SubtitleMoverTests`, `TorrentServiceTests`
 - `VideoFileFinderTests`, `VideoMoverTests`

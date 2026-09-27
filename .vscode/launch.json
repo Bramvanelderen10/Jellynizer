@@ -2,13 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": ".NET Launch Jellyniser",
+      "name": ".NET Launch Jellynizer",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/src/Jellyniser/bin/Debug/net10.0/Jellyniser",
+      "program": "${workspaceFolder}/src/Jellynizer/bin/Debug/net10.0/Jellynizer",
       "args": [],
-      "cwd": "${workspaceFolder}/src/Jellyniser",
+      "cwd": "${workspaceFolder}/src/Jellynizer",
       "stopAtEntry": false,
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development"
