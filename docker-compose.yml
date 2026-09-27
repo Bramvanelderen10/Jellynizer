@@ -1,23 +1,23 @@
 services:
-  media-organizer:
+  jellyniser:
     image: ghcr.io/bramvanelderen10/mediaorganizer:0.0.13
-    container_name: media-organizer
+    container_name: jellyniser
     ports:
       - "45263:45263"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - TZ=Europe/Amsterdam
-      - MediaOrganizer__SourceFolder=/media
-      - MediaOrganizer__MoveHistoryDatabasePath=/data/move-history.db
+      - Jellyniser__SourceFolder=/media
+      - Jellyniser__MoveHistoryDatabasePath=/data/move-history.db
       # qBittorrent integration: lets POST /torrents/add hand a .torrent file to qBittorrent.
       # "qbittorrent" resolves through the shared local-network below.
-      - MediaOrganizer__Qbittorrent__Url=http://qbittorrent:8488
-      - MediaOrganizer__Qbittorrent__Username=admin
+      - Jellyniser__Qbittorrent__Url=http://qbittorrent:8488
+      - Jellyniser__Qbittorrent__Username=admin
       # Set the permanent WebUI password here after the first login (see README).
-      - MediaOrganizer__Qbittorrent__Password=change-me
+      - Jellyniser__Qbittorrent__Password=change-me
       # Must be a path qBittorrent can see. /media is the same bind mount in both services,
       # so downloads land in the folder that the organizer scans.
-      - MediaOrganizer__Qbittorrent__DownloadFolder=/media
+      - Jellyniser__Qbittorrent__DownloadFolder=/media
       # Match these to the UID/GID of the host user that owns your media files.
       # This ensures moved files are not owned by root, preventing SMB lock-out.
       # Run `id` on your host to find the right values.
@@ -36,7 +36,7 @@ services:
       - local-network
 
   # Optional: remove this service if you already run qBittorrent elsewhere.
-  # If you keep it, point MediaOrganizer__Qbittorrent__Url at wherever qBittorrent runs.
+  # If you keep it, point Jellyniser__Qbittorrent__Url at wherever qBittorrent runs.
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
@@ -49,12 +49,12 @@ services:
       - TORRENTING_PORT=6881
     ports:
       # Exposes the WebUI on your LAN. Use "127.0.0.1:8488:8488" to keep it local;
-      # MediaOrganizer reaches qBittorrent over the compose network either way.
+      # Jellyniser reaches qBittorrent over the compose network either way.
       - "8488:8488"
       - "6881:6881"
       - "6881:6881/udp"
     volumes:
-      # Keep this identical to the media-organizer mount so save paths line up.
+      # Keep this identical to the jellyniser mount so save paths line up.
       - /path/to/your/videos:/media
       - qbittorrent-config:/config
     restart: unless-stopped

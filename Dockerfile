@@ -2,12 +2,12 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy csproj and restore dependencies
-COPY src/MediaOrganizer/MediaOrganizer.csproj src/MediaOrganizer/
-RUN dotnet restore src/MediaOrganizer/MediaOrganizer.csproj
+COPY src/Jellyniser/Jellyniser.csproj src/Jellyniser/
+RUN dotnet restore src/Jellyniser/Jellyniser.csproj
 
 # Copy everything else and build
-COPY src/MediaOrganizer/ src/MediaOrganizer/
-RUN dotnet publish src/MediaOrganizer/MediaOrganizer.csproj -c Release -o /app/publish
+COPY src/Jellyniser/ src/Jellyniser/
+RUN dotnet publish src/Jellyniser/Jellyniser.csproj -c Release -o /app/publish
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
@@ -30,4 +30,4 @@ RUN chmod +x /entrypoint.sh
 EXPOSE 45263
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["dotnet", "MediaOrganizer.dll"]
+CMD ["dotnet", "Jellyniser.dll"]

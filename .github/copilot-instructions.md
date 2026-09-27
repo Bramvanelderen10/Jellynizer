@@ -18,7 +18,7 @@
 - IHttpClientFactory / HttpClient (qBittorrent WebUI integration)
 - Docker (multi-stage build with gosu for privilege de-escalation)
 
-## Configuration (`MediaOrganizer` section)
+## Configuration (`Jellyniser` section)
 
 | Key | Type | Default | Description |
 |---|---|---|---|
@@ -213,7 +213,7 @@ Parent folder name is also parsed as a fallback source for the pattern. If the i
 
 | Pattern | Usage |
 |---|---|
-| Options pattern | `MediaOrganizerOptions` bound from `MediaOrganizer` config section |
+| Options pattern | `JellyniserOptions` bound from `Jellyniser` config section |
 | DI / Singleton | All services registered as singletons |
 | `IDbContextFactory` | Thread-safe EF Core usage from singletons |
 | `IFileSystem` abstraction | All file operations go through `IFileSystem` for testability |
@@ -224,7 +224,7 @@ Parent folder name is also parsed as a fallback source for the pattern. If the i
 
 ## Testing
 
-Tests in `src/MediaOrganizer.Tests/` mock `IFileSystem` and `ITorrentClient` for isolated unit testing:
+Tests in `src/Jellyniser.Tests/` mock `IFileSystem` and `ITorrentClient` for isolated unit testing:
 - `DirectoryCleanerTests`, `MediaGrouperTests`, `MovePlanBuilderTests`
 - `PathHelpersTests`, `SubtitleMoverTests`, `TorrentServiceTests`
 - `VideoFileFinderTests`, `VideoMoverTests`

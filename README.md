@@ -6,9 +6,9 @@ It supports on-demand API triggers, subtitle companion moves, source cleanup, an
 
 ## What this repository contains
 
-- `src/MediaOrganizer`: backend service (minimal API)
-- `src/MediaOrganizer.Tests`: unit tests for organizer components
-- `src/MediaOrganizer.App`: Flutter companion app (separate README)
+- `src/Jellyniser`: backend service (minimal API)
+- `src/Jellyniser.Tests`: unit tests for organizer components
+- `src/Jellyniser.App`: Flutter companion app (separate README)
 
 ## Features
 
@@ -41,21 +41,21 @@ Replace `/media/bram/Expansion/Videos` with the host folder holding your videos.
 
 ```yaml
 services:
-  media-organizer:
+  jellyniser:
     image: ghcr.io/bramvanelderen10/mediaorganizer:0.0.13
-    container_name: media-organizer
+    container_name: jellyniser
     ports:
       - "45263:45263"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - TZ=Europe/Amsterdam
-      - MediaOrganizer__SourceFolder=/media
-      - MediaOrganizer__MoveHistoryDatabasePath=/data/move-history.db
+      - Jellyniser__SourceFolder=/media
+      - Jellyniser__MoveHistoryDatabasePath=/data/move-history.db
       # Torrent integration (see "Adding torrents" below)
-      - MediaOrganizer__Qbittorrent__Url=http://qbittorrent:8488
-      - MediaOrganizer__Qbittorrent__Username=admin
-      - MediaOrganizer__Qbittorrent__Password=your-webui-password
-      - MediaOrganizer__Qbittorrent__DownloadFolder=/media
+      - Jellyniser__Qbittorrent__Url=http://qbittorrent:8488
+      - Jellyniser__Qbittorrent__Username=admin
+      - Jellyniser__Qbittorrent__Password=your-webui-password
+      - Jellyniser__Qbittorrent__DownloadFolder=/media
       # Match PUID/PGID to the host user that owns your media files, otherwise moved
       # files end up root-owned and get locked over SMB. Run `id` on your host.
       - PUID=1000
@@ -84,7 +84,7 @@ services:
       - "6881:6881"
       - "6881:6881/udp"
     volumes:
-      # MUST be identical to the media-organizer mount above.
+      # MUST be identical to the jellyniser mount above.
       - /media/bram/Expansion/Videos:/media
       - qbittorrent-config:/config
     restart: unless-stopped
@@ -104,7 +104,7 @@ curl http://localhost:45263/health
 docker compose logs qbittorrent
 ```
 
-Set that permanent password as `MediaOrganizer__Qbittorrent__Password`. If you skip this,
+Set that permanent password as `Jellyniser__Qbittorrent__Password`. If you skip this,
 qBittorrent generates a new password on every restart and the integration breaks.
 
 > Prefer your own scheduler? Drop the `qbittorrent` service and the `Qbittorrent` env vars.
@@ -289,7 +289,7 @@ Examples:
 
 ## Configuration
 
-Settings are under `MediaOrganizer` in `appsettings.json` or environment variables (`__` separator).
+Settings are under `Jellyniser` in `appsettings.json` or environment variables (`__` separator).
 
 | Key | Default | Description |
 |---|---|---|
@@ -307,7 +307,7 @@ Settings are under `MediaOrganizer` in `appsettings.json` or environment variabl
 | `Qbittorrent:RequestTimeoutSeconds` | `60` | Timeout for qBittorrent HTTP calls |
 
 **Docker-only environment variables** (handled by `entrypoint.sh`, not part of the
-`MediaOrganizer` config section):
+`Jellyniser` config section):
 
 | Variable | Default | Description |
 |---|---|---|
@@ -321,7 +321,7 @@ Example `appsettings.json` (the Docker example above uses environment variables 
 
 ```json
 {
-  "MediaOrganizer": {
+  "Jellyniser": {
     "SourceFolder": "/media",
     "MoveHistoryDatabasePath": "/data/move-history.db",
     "VideoExtensions": [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".m4v", ".webm", ".ts", ".mpg", ".mpeg"],
@@ -357,7 +357,7 @@ Prerequisite: [.NET 10 SDK](https://dotnet.microsoft.com/download)
 Run service:
 
 ```bash
-dotnet run --project src/MediaOrganizer/MediaOrganizer.csproj
+dotnet run --project src/Jellyniser/Jellyniser.csproj
 ```
 
 Run tests:
@@ -369,16 +369,16 @@ dotnet test
 Build:
 
 ```bash
-dotnet build src/MediaOrganizer/MediaOrganizer.csproj
+dotnet build src/Jellyniser/Jellyniser.csproj
 ```
 
 ## Repo layout
 
 ```text
 src/
-  MediaOrganizer/          # Backend service (minimal API)
-  MediaOrganizer.Tests/    # Unit tests
-  MediaOrganizer.App/      # Flutter companion app (mobile/desktop/web client)
+  Jellyniser/          # Backend service (minimal API)
+  Jellyniser.Tests/    # Unit tests
+  Jellyniser.App/      # Flutter companion app (mobile/desktop/web client)
 tools/
   mcreate/                 # CLI tool to recreate folder structures with empty files
 ```
@@ -391,8 +391,8 @@ tools/
 | Files skipped | Source path exists and extension lists are correct |
 | Duplicate names | Expected behavior; unique suffix is applied |
 | Moved files locked / can't delete via SMB | Container is running as root; set `PUID`/`PGID` to match the host user that owns your media files (run `id` on the host) |
-| Torrent endpoints return `503` | `MediaOrganizer__Qbittorrent__Url` is set and qBittorrent is reachable from the container |
-| Torrent endpoints return `502` | Check `docker compose logs media-organizer`; usually bad credentials or qBittorrent rejecting the torrent |
+| Torrent endpoints return `503` | `Jellyniser__Qbittorrent__Url` is set and qBittorrent is reachable from the container |
+| Torrent endpoints return `502` | Check `docker compose logs jellyniser`; usually bad credentials or qBittorrent rejecting the torrent |
 | qBittorrent login fails after a restart | The temporary password changed. Set a permanent one in **Tools → Options → WebUI → Authentication** and update `Qbittorrent__Password` |
 | Downloads land in the wrong place | `Qbittorrent__DownloadFolder` must be a path **qBittorrent** sees, and both services must mount the same host folder at the same container path |
 | An unfinished download disappeared | The organize job ran mid-download; see the warning under "Download folder" |

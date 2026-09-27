@@ -63,7 +63,7 @@ jobs:
       contents: write
 
     env:
-      APP_DIR: src/MediaOrganizer.App
+      APP_DIR: src/Jellyniser.App
 
     steps:
       - name: Checkout repository
@@ -189,7 +189,7 @@ jobs:
             exit 1
           fi
 
-          apk_name="MediaOrganizer-${{ steps.vars.outputs.tag }}-android.apk"
+          apk_name="Jellyniser-${{ steps.vars.outputs.tag }}-android.apk"
           apk_out="${{ env.APP_DIR }}/build/$apk_name"
           cp "$apk_src" "$apk_out"
 
