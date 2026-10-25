@@ -30,7 +30,10 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
-pubspec.lock
+
+# NOTE: pubspec.lock is deliberately NOT ignored here. This is an application
+# (publish_to: "none"), not a reusable package, so the lockfile is committed to
+# keep local development and the CI APK build on identical dependency versions.
 
 # Platform directories
 /ios/
