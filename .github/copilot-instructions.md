@@ -253,3 +253,10 @@ It asserts:
 - that episode files follow `{Show}/Season {NN}/{Show} S{NN}E{EE}.ext` and show names carry no season marker.
 
 When naming/grouping changes on purpose, regenerate the fixture with the CLI dry run over the source tree and update the expected counts.
+
+### Flutter tests (`src/Jellynizer.App/test/`)
+
+CI runs `flutter analyze` and `flutter test` before packaging the APK.
+
+- `StorageService` creates a `SharedPreferencesAsync`, which throws unless a platform implementation is registered. Tests set `SharedPreferencesAsyncPlatform.instance = InMemorySharedPreferencesAsync.empty()` in `setUp` (dev dependency `shared_preferences_platform_interface`).
+- Widget tests call `getIt.reset()` in `setUp`/`tearDown` because `setupServiceLocator()` registers singletons on the global `GetIt` instance.

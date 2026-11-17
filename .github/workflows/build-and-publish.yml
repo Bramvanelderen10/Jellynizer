@@ -137,6 +137,12 @@ jobs:
         working-directory: ${{ env.APP_DIR }}
         run: flutter pub get
 
+      - name: Flutter analyze and test
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          flutter analyze
+          flutter test
+
       - name: Decode Android keystore (release signing)
         working-directory: ${{ env.APP_DIR }}
         shell: bash

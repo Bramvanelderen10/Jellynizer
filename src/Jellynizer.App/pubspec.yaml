@@ -23,6 +23,9 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.14.4
+  # Provides InMemorySharedPreferencesAsync, used by widget tests: StorageService builds a
+  # SharedPreferencesAsync, which needs a platform implementation to exist.
+  shared_preferences_platform_interface: ^2.4.1
 
 flutter:
   uses-material-design: true

@@ -445,12 +445,16 @@ Target Compatibility Between Java and Kotlin Tasks"* (Java 1.8 vs Kotlin 17).
 built-in Kotlin (remove `kotlin-android` from `app/build.gradle.kts` and the
 `org.jetbrains.kotlin.android` plugin from `settings.gradle.kts`), and drop the
 `receive_sharing_intent` cap. Flutter's templates then use Gradle 9.5.0, AGP 9.3.1 and Kotlin
-2.4.20. Minimum Gradle per AGP: 9.0 → 9.1.0, 9.1 → 9.3.1, 9.2 → 9.4.1, 9.3 → 9.5.0. Always run a
-local release build before tagging:
+2.4.20. Minimum Gradle per AGP: 9.0 → 9.1.0, 9.1 → 9.3.1, 9.2 → 9.4.1, 9.3 → 9.5.0.
+
+CI also runs `flutter analyze` and `flutter test` before packaging, so a lint or widget-test
+failure fails the build. Always run them locally first:
 
 ```bash
 cd src/Jellynizer.App
 flutter pub get
+flutter analyze
+flutter test
 flutter build apk --release
 ```
 
