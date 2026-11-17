@@ -640,8 +640,30 @@ public class MediaGrouperTests
     [InlineData("One Piece", "One Piece")]
     [InlineData("Blade Runner 2049", "Blade Runner 2049")] // beyond current year + 1
     [InlineData("2073", "2073")] // whole title is a number, nothing to wrap
-    public void FormatMediaName_FormatsOnlyPlausibleTrailingYears(string input, string expected)
+    [InlineData("Agatha All Along S01", "Agatha All Along")]
+    [InlineData("Summertime Render S01", "Summertime Render")]
+    [InlineData("Show Season 2", "Show")]
+    [InlineData("Agatha All Along S01 2024", "Agatha All Along (2024)")]
+    [InlineData("Kaiju No 8", "Kaiju No 8")] // trailing number is part of the title
+    public void FormatMediaName_FormatsOnlyPlausibleTrailingYearsAndSeasonMarkers(string input, string expected)
     {
         Assert.Equal(expected, MediaGrouper.FormatMediaName(input));
+    }
+
+    [Fact]
+    public void GroupMediaFiles_FolderWithSeasonMarker_ShowNameHasNoSeasonMarker()
+    {
+        // Folder is named "Agatha All Along S01"; the season belongs in the Season folder, not the name
+        var files = new List<string>
+        {
+            "/media/Agatha All Along S01/Season 01/Agatha All Along S01E01.mkv",
+            "/media/Agatha All Along S01/Season 01/Agatha All Along S01E02.mkv",
+        };
+
+        var show = Assert.Single(_sut.GroupMediaFiles(files));
+
+        Assert.Equal(MediaType.Show, show.Type);
+        Assert.Equal("Agatha All Along", show.Name);
+        Assert.Equal(1, show.Seasons.Single().SeasonNumber);
     }
 }

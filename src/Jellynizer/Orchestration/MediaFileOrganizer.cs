@@ -76,7 +76,7 @@ public class MediaFileOrganizer
         var mediaGroups = _mediaGrouper.GroupMediaFiles(allVideoFiles);
 
         // Build the move plan - this checks history and updates database records
-        var rootDestinationFolder = _options.DestinationFolder ?? sourceFolder;
+        var rootDestinationFolder = ResolveDestinationRoot(_options.DestinationFolder, sourceFolder);
         _movePlanBuilder.BuildMovePlan(mediaGroups, rootDestinationFolder);
 
         // Get entries that need to be moved (those with IsMoved = false)
@@ -96,6 +96,19 @@ public class MediaFileOrganizer
             skippedCount,
             movedSubtitles.Count,
             leftoverFilesRemoved));
+    }
+
+    /// <summary>
+    /// Resolves the destination root. A missing, empty or whitespace-only
+    /// <paramref name="configuredDestination"/> means "organize in place", i.e. use the source folder.
+    /// The result is always an absolute path; a relative destination would otherwise make
+    /// <see cref="Planning.MovePlanBuilder"/> produce relative targets, and files would be moved
+    /// relative to the process working directory instead of the library.
+    /// </summary>
+    public static string ResolveDestinationRoot(string? configuredDestination, string sourceFolder)
+    {
+        var root = string.IsNullOrWhiteSpace(configuredDestination) ? sourceFolder : configuredDestination;
+        return Path.GetFullPath(root);
     }
 }
 

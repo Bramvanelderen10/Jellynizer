@@ -144,8 +144,9 @@ public class MovePlanBuilder
     /// <summary>
     /// Resolves the destination path for a file based on the media object and root folder.
     /// Follows the folder structure rules for movies and shows.
+    /// Public so tooling (e.g. <c>Jellynizer.Cli --dry-run</c>) can preview moves.
     /// </summary>
-    private static string ResolveDestinationPath(string filePath, MediaObject media, string rootFolder)
+    public static string ResolveDestinationPath(string filePath, MediaObject media, string rootFolder)
     {
         var extension = Path.GetExtension(filePath);
 

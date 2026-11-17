@@ -143,7 +143,7 @@ Parent folder name is also parsed as a fallback source for the pattern. If the i
 ### MediaObject Construction
 - Single file, no SxxExx → **Movie** (uses cleaned name).
 - Multiple files OR any file with SxxExx → **Show**.
-- Names are formatted for Jellyfin via `MediaGrouper.FormatMediaName`: a plausible trailing year (1900 … current year + 1) becomes `Name (Year)` (e.g. `East of Eden 2026` → `East of Eden (2026)`).
+- Names are formatted for Jellyfin via `MediaGrouper.FormatMediaName`: a trailing season marker is dropped (`Summertime Render S01` → `Summertime Render`) and a plausible trailing year (1900 … current year + 1) becomes `Name (Year)` (e.g. `East of Eden 2026` → `East of Eden (2026)`).
 
 ### Season Building
 - Files bucketed by season number (default to season 1 if no explicit season).
@@ -213,6 +213,16 @@ Parent folder name is also parsed as a fallback source for the pattern. If the i
 > `CleanupSourceDirectories(IEnumerable<string> movedSourcePaths, string sourceRoot)` also exists on the
 > class but is currently unreferenced (dead code).
 
+## CLI (`Jellynizer.Cli`)
+
+Console app for verifying the organizer against a folder without running the API.
+
+- `src/Jellynizer.Cli` — `net10.0` console project referencing `src/Jellynizer/`.
+- Registers **the same services and options** as the web app, then either prints a plan (`--dry-run`) or calls `MediaFileOrganizer.OrganizeAsync`.
+- `appsettings.json` holds the `Jellynizer` section (`SourceFolder`, `DestinationFolder`, `MoveHistoryDatabasePath`, extensions); `--source`, `--destination`, `--db` override it, as do env vars (`Jellynizer__SourceFolder`).
+- Dry run is read-only: it calls `VideoFileFinder.GetVideoFiles(..., deleteTrashFiles: false)` and uses `MovePlanBuilder.ResolveDestinationPath` to print targets.
+- Other flags: `-v/--verbose`, `-q/--quiet`, `-h/--help`.
+
 ## Key Patterns
 
 | Pattern | Usage |
@@ -232,6 +242,3 @@ Tests in `src/Jellynizer.Tests/` mock `IFileSystem` and `ITorrentClient` for iso
 - `DirectoryCleanerTests`, `MediaGrouperTests`, `MovePlanBuilderTests`
 - `PathHelpersTests`, `SubtitleMoverTests`, `TorrentServiceTests`
 - `VideoFileFinderTests`, `VideoMoverTests`
-
-> Note: `MediaFileRestorerTests` is stale — it targets a `MediaFileRestorer` class that no longer exists,
-> so the test project currently fails to compile until it is deleted or rewritten.

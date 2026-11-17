@@ -7,6 +7,7 @@ public class MediaGrouper
     private static readonly Regex BracketPattern = new(@"\[[^\]]*\]|\([^\)]*\)", RegexOptions.Compiled);
     private static readonly Regex BracketedYearPattern = new(@"\(\s*(?<year>(?:19|20)\d{2})\s*\)", RegexOptions.Compiled);
     private static readonly Regex TrailingYearPattern = new(@"\s+(?<year>(?:19|20)\d{2})$", RegexOptions.Compiled);
+    private static readonly Regex TrailingSeasonMarkerPattern = new(@"\s+(?:Season\s*\d{1,2}|S\d{1,2})$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex ResolutionPattern = new(@"\b(2160|1080|720|480|360)[pi]\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex CodecPattern = new(@"\b(x264|x265|h[\.\s]?264|h[\.\s]?265|HEVC|AVC|AAC|DTS|FLAC|10bit|8bit)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex ReleaseGroupPattern = new(@"\b(ELiTE|YIFY|BONE|AAC5|RARBG|FGT|LOL|ETTV|EZTVx?|SubsPlease|BluRay|BRRip|WEBRip|WEB[\-\.]?DL|HDRip|DVDRip|Dual\s*Audio|PROPER|REPACK|EMBER|Cleo|INTERNAL)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -152,24 +153,35 @@ public class MediaGrouper
     }
 
     /// <summary>
-    /// Converts a trailing release year into Jellyfin's "Name (Year)" convention,
-    /// e.g. "East of Eden 2026" becomes "East of Eden (2026)".
-    /// Years outside a plausible range (1900 .. current year + 1) are left untouched so
-    /// titles that simply end in a number are not mangled.
+    /// Formats a media name for Jellyfin:
+    /// - a trailing season marker is removed ("Summertime Render S01" becomes "Summertime Render"),
+    ///   because the season is expressed as a folder later on;
+    /// - a plausible trailing release year becomes "Name (Year)" ("East of Eden 2026" becomes
+    ///   "East of Eden (2026)"). Years outside 1900 .. current year + 1 are left untouched so
+    ///   titles that simply end in a number are not mangled.
     /// </summary>
     public static string FormatMediaName(string name)
     {
-        var match = TrailingYearPattern.Match(name);
-        if (!match.Success)
-            return name;
+        var yearSuffix = string.Empty;
+        var working = name;
 
-        var year = int.Parse(match.Groups["year"].Value);
-        var maxYear = DateTime.UtcNow.Year + 1;
-        if (year < 1900 || year > maxYear)
-            return name;
+        var yearMatch = TrailingYearPattern.Match(name);
+        if (yearMatch.Success && yearMatch.Index > 0)
+        {
+            var year = int.Parse(yearMatch.Groups["year"].Value);
+            var maxYear = DateTime.UtcNow.Year + 1;
+            if (year >= 1900 && year <= maxYear)
+            {
+                working = name[..yearMatch.Index].TrimEnd();
+                yearSuffix = $" ({year})";
+            }
+        }
 
-        var title = name[..match.Index].TrimEnd();
-        return title.Length == 0 ? name : $"{title} ({year})";
+        var withoutSeasonMarker = TrailingSeasonMarkerPattern.Replace(working, string.Empty).TrimEnd();
+        if (withoutSeasonMarker.Length > 0)
+            working = withoutSeasonMarker;
+
+        return working + yearSuffix;
     }
 
     // ──────────────────────────── Pre-grouping ────────────────────────────

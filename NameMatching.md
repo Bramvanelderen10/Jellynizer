@@ -366,7 +366,7 @@ Folder structure:
 
 Episode filenames are **always standardized** to `{ShowName} S{Season:00}E{Episode:00}.ext`, regardless of what the original filename contains. This drops quality/source/codec/group tags and episode titles so Jellyfin can parse the file reliably.
 
-The show name is also formatted for Jellyfin: a plausible trailing release year (1900 … current year + 1) becomes `Name (Year)`. Years outside that range are left as-is, so titles that merely end in a number are not mangled.
+The show name is also formatted for Jellyfin: a trailing season marker is dropped (`Summertime Render S01` becomes `Summertime Render`) and a plausible trailing release year (1900 … current year + 1) becomes `Name (Year)`. Years outside that range are left as-is, so titles that merely end in a number are not mangled.
 
 Examples:
 

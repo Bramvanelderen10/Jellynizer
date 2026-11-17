@@ -290,6 +290,42 @@ Examples:
 - `[SubsPlease] Kisen - 56 (1080p) [0F106B43].mkv` → `Kisen/Season 01/Kisen S01E56.mkv`
 - `East of Eden 2026 S01E01 Brothers 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv` → `East of Eden (2026)/Season 01/East of Eden (2026) S01E01.mkv`
 
+## Verify against a folder (CLI)
+
+`src/Jellynizer.Cli` is a console app that wires up **exactly the same services** as the API (`MediaGrouper`, `MovePlanBuilder`, `VideoMover`, `SubtitleMover`, `DirectoryCleaner`, move-history DB), so you can check what will happen to a folder without running the whole server.
+
+Set the folder in `src/Jellynizer.Cli/appsettings.json`:
+
+```json
+{
+  "Jellynizer": {
+    "SourceFolder": "/home/you/Documents/test",
+    "DestinationFolder": "",
+    "MoveHistoryDatabasePath": "data/cli-move-history.db"
+  }
+}
+```
+
+`DestinationFolder` empty means "organize in place".
+
+Run it:
+
+```bash
+# Preview only - prints the parsed library and every destination path, moves nothing
+dotnet run --project src/Jellynizer.Cli -- --dry-run
+
+# Same, including the original path of every item
+dotnet run --project src/Jellynizer.Cli -- --dry-run --verbose
+
+# Actually organize
+dotnet run --project src/Jellynizer.Cli
+
+# Override the configured folders
+dotnet run --project src/Jellynizer.Cli -- --source ~/Downloads --destination ~/Media --db /tmp/verify.db
+```
+
+Options: `-s/--source`, `-d/--destination`, `--db`, `--dry-run`/`--plan`, `-v/--verbose`, `-q/--quiet`, `-h/--help`. Environment variables work too (`Jellynizer__SourceFolder=/media/downloads`). The dry run does not delete qBittorrent trash markers, so it is fully read-only.
+
 ## Configuration
 
 Settings are under `Jellynizer` in `appsettings.json` or environment variables (`__` separator).
@@ -380,6 +416,7 @@ dotnet build src/Jellynizer/Jellynizer.csproj
 ```text
 src/
   Jellynizer/          # Backend service (minimal API)
+  Jellynizer.Cli/      # Console app for running/verifying the organizer against a folder
   Jellynizer.Tests/    # Unit tests
   Jellynizer.App/      # Flutter companion app (mobile/desktop/web client)
 tools/

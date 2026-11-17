@@ -11,7 +11,16 @@ public class VideoFileFinder
         _fileSystem = fileSystem;
     }
 
-    public IReadOnlyList<string> GetVideoFiles(string sourceFolder, IEnumerable<string> extensions)
+    /// <param name="sourceFolder">Root folder to scan.</param>
+    /// <param name="extensions">Allowed video extensions.</param>
+    /// <param name="deleteTrashFiles">
+    /// When true (default), leftover qBittorrent trash markers (<c>.*trash*</c>) are deleted while scanning.
+    /// Pass false for side-effect free runs such as a dry run.
+    /// </param>
+    public IReadOnlyList<string> GetVideoFiles(
+        string sourceFolder,
+        IEnumerable<string> extensions,
+        bool deleteTrashFiles = true)
     {
         var allowedExtensions = extensions
             .Select(NormalizeExtension)
@@ -23,7 +32,11 @@ public class VideoFileFinder
         {
             if (IsHiddenFile(path))
             {
-                _fileSystem.DeleteFile(path);
+                if (deleteTrashFiles)
+                {
+                    _fileSystem.DeleteFile(path);
+                }
+
                 continue;
             }
 
