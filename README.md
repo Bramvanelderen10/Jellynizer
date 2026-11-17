@@ -278,14 +278,17 @@ Movie:
 Show:
 
 ```text
-{root}/{Name}/Season {NN}/{originalFileName}.ext
+{root}/{Name}/Season {NN}/{Name} S{NN}E{EE}.ext
 ```
+
+Episode filenames are always standardized (quality/source/codec/group tags and episode titles are dropped), and a trailing year in the name is written as `Name (Year)` for Jellyfin.
 
 Examples:
 
-- `example.2014.mp4` → `Example 2014/Example 2014.mp4`
-- `The.Show.S02E03.Care.mkv` → `The Show/Season 02/The.Show.S02E03..Care.mkv`
-- `[SubsPlease] Kisen - 56 (1080p) [0F106B43].mkv` → `Kisen/Season 01/[SubsPlease] Kisen - 56 (1080p) [0F106B43].mkv`
+- `example.2014.mp4` → `Example (2014)/Example (2014).mp4`
+- `The.Show.S02E03.Care.mkv` → `The Show/Season 02/The Show S02E03.mkv`
+- `[SubsPlease] Kisen - 56 (1080p) [0F106B43].mkv` → `Kisen/Season 01/Kisen S01E56.mkv`
+- `East of Eden 2026 S01E01 Brothers 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv` → `East of Eden (2026)/Season 01/East of Eden (2026) S01E01.mkv`
 
 ## Configuration
 

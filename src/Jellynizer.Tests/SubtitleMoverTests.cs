@@ -124,4 +124,79 @@ public class SubtitleMoverTests
 
         Assert.Empty(result);
     }
+
+    [Fact]
+    public void MoveCompanionSubtitles_SubtitleWithMatchingSxxExx_StandardizesToVideoNameAndLanguage()
+    {
+        // Subtitle carries the same release junk as the video; it should be renamed to
+        // "{VideoName}.{Language}.ext" instead of keeping tags and episode titles.
+        var videoSource = "/source/East of Eden 2026 S01E01 Brothers 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv";
+        var subtitleSource = "/source/East of Eden 2026 S01E01 Brothers 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.en.srt";
+        var expectedDestination = "/dest/East of Eden (2026)/Season 01/East of Eden (2026) S01E01.en.srt";
+
+        var movedVideos = new List<MovedFileInfo>
+        {
+            new(videoSource, "/dest/East of Eden (2026)/Season 01/East of Eden (2026) S01E01.mkv")
+        };
+
+        _fsMock.Setup(f => f.DirectoryExists("/source")).Returns(true);
+        _fsMock.Setup(f => f.EnumerateFiles("/source", "*", SearchOption.TopDirectoryOnly))
+            .Returns(new[] { subtitleSource });
+        _fsMock.Setup(f => f.FileExists(subtitleSource)).Returns(true);
+        _fsMock.Setup(f => f.FileExists(It.Is<string>(p => p.StartsWith("/dest")))).Returns(false);
+
+        var result = _sut.MoveCompanionSubtitles(movedVideos, new[] { ".srt" }, "/source");
+
+        Assert.Single(result);
+        Assert.Equal(expectedDestination, result[0].DestinationPath);
+        _fsMock.Verify(f => f.MoveFile(subtitleSource, expectedDestination), Times.Once);
+    }
+
+    [Fact]
+    public void MoveCompanionSubtitles_SubtitleInEpisodeFolderWithoutLanguage_StandardizesToVideoName()
+    {
+        var videoSource = "/source/Show/Show.S01E01.1080p.mkv";
+        var subtitleSource = "/source/Show/Subs/Show.S01E01/2_English.srt";
+        var expectedDestination = "/dest/Show/Season 01/Show S01E01.English.srt";
+
+        var movedVideos = new List<MovedFileInfo>
+        {
+            new(videoSource, "/dest/Show/Season 01/Show S01E01.mkv")
+        };
+
+        _fsMock.Setup(f => f.DirectoryExists("/source/Show")).Returns(true);
+        _fsMock.Setup(f => f.EnumerateFiles("/source/Show", "*", SearchOption.AllDirectories))
+            .Returns(new[] { subtitleSource });
+        _fsMock.Setup(f => f.FileExists(subtitleSource)).Returns(true);
+        _fsMock.Setup(f => f.FileExists(It.Is<string>(p => p.StartsWith("/dest")))).Returns(false);
+
+        var result = _sut.MoveCompanionSubtitles(movedVideos, new[] { ".srt" }, "/source");
+
+        Assert.Single(result);
+        Assert.Equal(expectedDestination, result[0].DestinationPath);
+    }
+
+    [Fact]
+    public void MoveCompanionSubtitles_MovieSubtitle_KeepsTitleWithoutDuplicating()
+    {
+        var videoSource = "/source/Interstellar.2014.1080p.mkv";
+        var subtitleSource = "/source/Interstellar.2014.en.srt";
+        var expectedDestination = "/dest/Interstellar (2014)/Interstellar (2014).en.srt";
+
+        var movedVideos = new List<MovedFileInfo>
+        {
+            new(videoSource, "/dest/Interstellar (2014)/Interstellar (2014).mkv")
+        };
+
+        _fsMock.Setup(f => f.DirectoryExists("/source")).Returns(true);
+        _fsMock.Setup(f => f.EnumerateFiles("/source", "*", SearchOption.TopDirectoryOnly))
+            .Returns(new[] { subtitleSource });
+        _fsMock.Setup(f => f.FileExists(subtitleSource)).Returns(true);
+        _fsMock.Setup(f => f.FileExists(It.Is<string>(p => p.StartsWith("/dest")))).Returns(false);
+
+        var result = _sut.MoveCompanionSubtitles(movedVideos, new[] { ".srt" }, "/source");
+
+        Assert.Single(result);
+        Assert.Equal(expectedDestination, result[0].DestinationPath);
+    }
 }

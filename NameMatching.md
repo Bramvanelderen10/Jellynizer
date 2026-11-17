@@ -53,13 +53,14 @@ The cleaner runs on:
 
 It applies these transformations, in this order:
 
-1. Remove bracketed content: any `[...]` or `(...)`
-2. Remove resolution tags matching `2160p/i`, `1080p/i`, `720p/i`, `480p/i`, `360p/i`
-3. Remove codec-ish tags like `x264`, `x265`, `h264`, `h.265`, `HEVC`, `AVC`, `AAC`, `DTS`, `FLAC`, `10bit`, `8bit`
-4. Remove known release/source tags (examples): `ELiTE`, `YIFY`, `BONE`, `RARBG`, `SubsPlease`, `BluRay`, `BRRip`, `WEBRip`, `WEB-DL`, `HDRip`, `DVDRip`, `Dual Audio`, `PROPER`, `REPACK`, `EMBER`, `Cleo`, `INTERNAL`
-5. Remove version tags like `V2`, `V3`, etc.
-6. Replace separators `.` `_` `-` with spaces
-7. Collapse whitespace and trim
+1. Keep a parenthesized year (`(2026)`) by turning `Show (2026)` into `Show 2026`, so the year is not lost in step 2
+2. Remove other bracketed content: any `[...]` or `(...)`
+3. Remove resolution tags matching `2160p/i`, `1080p/i`, `720p/i`, `480p/i`, `360p/i`
+4. Remove codec-ish tags like `x264`, `x265`, `h264`, `h.264`, `h 264`, `h.265`, `hevc`, `AVC`, `AAC`, `DTS`, `FLAC`, `10bit`, `8bit`
+5. Remove known release/source tags (examples): `ELiTE`, `YIFY`, `BONE`, `RARBG`, `SubsPlease`, `BluRay`, `BRRip`, `WEBRip`, `WEB-DL`, `HDRip`, `DVDRip`, `Dual Audio`, `PROPER`, `REPACK`, `EMBER`, `Cleo`, `INTERNAL`
+6. Remove version tags like `V2`, `V3`, etc.
+7. Replace separators `.` `_` `-` with spaces
+8. Collapse whitespace and trim
 
 Example:
 
@@ -346,10 +347,13 @@ Folder structure:
 {root}/{MovieName}/{MovieName}.ext
 ```
 
+A plausible trailing year is formatted as `Name (Year)` (same rule as shows, see 8.2).
+
 Example:
 
 ```
 {root}/Taxi Driver/Taxi Driver.mkv
+{root}/Interstellar (2014)/Interstellar (2014).mkv
 ```
 
 ### 8.2 Shows
@@ -357,26 +361,27 @@ Example:
 Folder structure:
 
 ```
-{root}/{ShowName}/Season {NN}/{FileName}.ext
+{root}/{ShowName}/Season {NN}/{ShowName} S{NN}E{EE}.ext
 ```
 
-The filename depends on whether the original filename already contains the show name:
+Episode filenames are **always standardized** to `{ShowName} S{Season:00}E{Episode:00}.ext`, regardless of what the original filename contains. This drops quality/source/codec/group tags and episode titles so Jellyfin can parse the file reliably.
 
-- **Show name present in filename**: the original filename is preserved (after stripping trailing copy suffixes).
-- **Show name missing from filename**: the file is renamed to `{ShowName} S{Season:00}E{Episode:00}.ext`.
-
-The check normalizes the filename by replacing `.`, `_`, `-` with spaces and does a case-insensitive substring search for the show name.
+The show name is also formatted for Jellyfin: a plausible trailing release year (1900 … current year + 1) becomes `Name (Year)`. Years outside that range are left as-is, so titles that merely end in a number are not mangled.
 
 Examples:
 
 ```
-# Show name already in filename → preserved
-Input:  The.Office.S02E03.Health.Care.mkv  (show: "The Office")
-Output: {root}/The Office/Season 02/The.Office.S02E03.Health.Care.mkv
+# Original filename already contains the show name
+Input:  The.Office.S02E03.Health.Care.1080p.WEB-DL.mkv  (show: "The Office")
+Output: {root}/The Office/Season 02/The Office S02E03.mkv
 
 # Show name missing → reconstructed
 Input:  S02E06-The Beauty Makes Her Move [5F8B3E3E].mkv  (show: "ThatTimeIGotReincarnatedAsASlime")
 Output: {root}/ThatTimeIGotReincarnatedAsASlime/Season 02/ThatTimeIGotReincarnatedAsASlime S02E06.mkv
+
+# Year in the show name → parenthesized
+Input:  East of Eden 2026 S01E01 Brothers 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv
+Output: {root}/East of Eden (2026)/Season 01/East of Eden (2026) S01E01.mkv
 ```
 
 ---
@@ -419,8 +424,8 @@ Destination:
 
 ```
 {root}/Dark Matter/Season 01/Dark Matter S01E06.mkv
-{root}/Dark Matter/Season 01/Dark Matter 1080p x265 ELiTE[EZTVx] S01E07.mkv
-{root}/Dark Matter/Season 01/Dark Matter 1080p x265 ELiTE[EZTVx] S01E08.mkv
+{root}/Dark Matter/Season 01/Dark Matter S01E07.mkv
+{root}/Dark Matter/Season 01/Dark Matter S01E08.mkv
 ```
 
 ### Example B — Movie with year in name
@@ -441,12 +446,12 @@ Title:           Interstellar   (because trailing number parsing matches 2014)
 Classification:
 
 - Single file and no parsed Season → **Movie**
-- Movie name uses `CleanedFileName`, so the year remains in the folder name.
+- Movie name uses `CleanedFileName` (the year remains part of it) and is then formatted as `Name (Year)`
 
 Destination:
 
 ```
-{root}/Interstellar 2014/Interstellar 2014.mkv
+{root}/Interstellar (2014)/Interstellar (2014).mkv
 ```
 
 ### Example C — Anime-style (trailing episode numbers)
@@ -471,9 +476,9 @@ Classification:
 Destinations:
 
 ```
-{root}/Jujutsu Kaisen/Season 01/[SubsPlease] Jujutsu Kaisen - 55 (1080p) [AAAA].mkv
-{root}/Jujutsu Kaisen/Season 01/[SubsPlease] Jujutsu Kaisen - 56 (1080p) [BBBB].mkv
-{root}/Jujutsu Kaisen/Season 01/[SubsPlease] Jujutsu Kaisen - 57 (1080p) [CCCC].mkv
+{root}/Jujutsu Kaisen/Season 01/Jujutsu Kaisen S01E55.mkv
+{root}/Jujutsu Kaisen/Season 01/Jujutsu Kaisen S01E56.mkv
+{root}/Jujutsu Kaisen/Season 01/Jujutsu Kaisen S01E57.mkv
 ```
 
 ---

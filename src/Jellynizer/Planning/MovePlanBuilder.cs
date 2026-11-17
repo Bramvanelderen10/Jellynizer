@@ -1,4 +1,3 @@
-using Jellynizer.Helpers;
 using Jellynizer.Parsing;
 using Jellynizer.History;
 
@@ -157,7 +156,9 @@ public class MovePlanBuilder
             return Path.Combine(movieFolder, $"{media.Name}{extension}");
         }
 
-        // Show structure: {root}/{ShowName}/Season {season}/{EpisodeName}.ext
+        // Show structure: {root}/{ShowName}/Season {season:00}/{ShowName} S{season:00}E{episode:00}.ext
+        // Episode filenames are always standardized so Jellyfin can parse them, regardless of
+        // the release tags (quality, source, codec, group) present in the original filename.
         // Find which season this episode belongs to
         foreach (var season in media.Seasons)
         {
@@ -165,15 +166,7 @@ public class MovePlanBuilder
             if (episode != null)
             {
                 var seasonFolder = Path.Combine(rootFolder, media.Name, $"Season {season.SeasonNumber:00}");
-                var fileName = Path.GetFileNameWithoutExtension(filePath);
-                // Strip trailing copy suffixes like " (1)" that may have accumulated
-                // from previous forget/re-organize cycles
-                fileName = PathHelpers.StripTrailingCopySuffixes(fileName);
-
-                // If the original filename doesn't contain the show name,
-                // reconstruct it as "{ShowName} S{Season}E{Episode}"
-                if (!FileNameContainsShowName(fileName, media.Name))
-                    fileName = $"{media.Name} S{season.SeasonNumber:00}E{episode.EpisodeNumber:00}";
+                var fileName = $"{media.Name} S{season.SeasonNumber:00}E{episode.EpisodeNumber:00}";
 
                 return Path.Combine(seasonFolder, $"{fileName}{extension}");
             }
@@ -182,15 +175,5 @@ public class MovePlanBuilder
         // Fallback - shouldn't reach here if media object is properly constructed
         throw new InvalidOperationException(
             $"Could not determine destination path for file {filePath} in media object {media.Name}");
-    }
-
-    private static bool FileNameContainsShowName(string fileName, string showName)
-    {
-        var normalizedFileName = fileName
-            .Replace('.', ' ')
-            .Replace('_', ' ')
-            .Replace('-', ' ');
-
-        return normalizedFileName.Contains(showName, StringComparison.OrdinalIgnoreCase);
     }
 }

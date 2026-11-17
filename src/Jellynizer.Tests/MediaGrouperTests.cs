@@ -580,4 +580,68 @@ public class MediaGrouperTests
         Assert.Equal(1, show.Seasons[0].SeasonNumber);
         Assert.Equal(1, show.Seasons[0].Episodes[0].EpisodeNumber);
     }
+
+    // ───────────────────── Jellyfin-friendly naming (year in parentheses) ─────────────────────
+
+    [Fact]
+    public void GroupMediaFiles_SceneReleaseWithYearInShowName_FormatsYearInParentheses()
+    {
+        // Real-world release: show name contains a year, filenames contain episode titles
+        // plus quality/source/codec/group tags and "H 264" (dot replaced by a space)
+        var folder = "/media/East of Eden 2026 S01 1080p NF WEB-DL DDP5.1 Atmos H264-FLUX";
+        var files = new List<string>
+        {
+            $"{folder}/East of Eden 2026 S01E01 Brothers 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv",
+            $"{folder}/East of Eden 2026 S01E02 Cathy 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv",
+            $"{folder}/East of Eden 2026 S01E03 In the Valley 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv",
+            $"{folder}/East of Eden 2026 S01E04 Kate 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv",
+            $"{folder}/East of Eden 2026 S01E05 Departure 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv",
+            $"{folder}/East of Eden 2026 S01E06 The Great Try 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv",
+            $"{folder}/East of Eden 2026 S01E07 Timshel 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv",
+        };
+
+        var show = Assert.Single(_sut.GroupMediaFiles(files));
+
+        Assert.Equal(MediaType.Show, show.Type);
+        Assert.Equal("East of Eden (2026)", show.Name);
+        var season = Assert.Single(show.Seasons);
+        Assert.Equal(1, season.SeasonNumber);
+        Assert.Equal(Enumerable.Range(1, 7), season.Episodes.Select(e => e.EpisodeNumber));
+    }
+
+    [Fact]
+    public void GroupMediaFiles_YearAlreadyInParentheses_NotDuplicated()
+    {
+        var files = new List<string>
+        {
+            "/media/East of Eden (2026)/East of Eden (2026) S01E01.mkv",
+            "/media/East of Eden (2026)/East of Eden (2026) S01E02.mkv",
+        };
+
+        var show = Assert.Single(_sut.GroupMediaFiles(files));
+
+        Assert.Equal("East of Eden (2026)", show.Name);
+    }
+
+    [Fact]
+    public void GroupMediaFiles_MovieWithYear_FormatsYearInParentheses()
+    {
+        var files = new List<string> { "/movies/Interstellar 2014.mp4" };
+
+        var movie = Assert.Single(_sut.GroupMediaFiles(files));
+
+        Assert.Equal(MediaType.Movie, movie.Type);
+        Assert.Equal("Interstellar (2014)", movie.Name);
+    }
+
+    [Theory]
+    [InlineData("East of Eden 2026", "East of Eden (2026)")]
+    [InlineData("East of Eden (2026)", "East of Eden (2026)")]
+    [InlineData("One Piece", "One Piece")]
+    [InlineData("Blade Runner 2049", "Blade Runner 2049")] // beyond current year + 1
+    [InlineData("2073", "2073")] // whole title is a number, nothing to wrap
+    public void FormatMediaName_FormatsOnlyPlausibleTrailingYears(string input, string expected)
+    {
+        Assert.Equal(expected, MediaGrouper.FormatMediaName(input));
+    }
 }

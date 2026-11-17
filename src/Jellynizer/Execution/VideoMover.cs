@@ -49,6 +49,17 @@ public class VideoMover
                 _moveHistoryStore.UpdateTargetPath(item.Id, uniqueDestinationPath);
             }
 
+            // The unique destination can resolve back to the source file itself when the source
+            // already sits at the destination with a " (1)" suffix and the standard name is taken.
+            // Moving a file onto itself throws, so treat it as already moved.
+            if (string.Equals(Path.GetFullPath(uniqueDestinationPath), Path.GetFullPath(item.OriginalFilePath), StringComparison.OrdinalIgnoreCase))
+            {
+                _moveHistoryStore.UpdateIsMoved(item.Id, true);
+                _logger.LogInformation("File already at destination, marking as moved: '{Path}'", uniqueDestinationPath);
+                movedFiles.Add(new MovedFileInfo(item.OriginalFilePath, uniqueDestinationPath));
+                continue;
+            }
+
             _fileSystem.MoveFile(item.OriginalFilePath, uniqueDestinationPath);
             _moveHistoryStore.UpdateIsMoved(item.Id, true);
 

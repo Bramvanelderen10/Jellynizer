@@ -120,7 +120,8 @@ All services are registered as **singletons** via DI. Key components:
 ## Filename Parsing Algorithm (`MediaGrouper`)
 
 ### Cleaning
-- Strip bracket tags `[...]` and `(...)`, resolution tags (1080p, etc.), codec tags (x265, etc.), release group tags (YIFY, BluRay, etc.).
+- Keep a parenthesized year (`Show (2026)` → `Show 2026`), then strip other bracket tags `[...]` and `(...)`.
+- Strip resolution tags (1080p, etc.), codec tags (x265, H 264, etc.), release group tags (YIFY, BluRay, etc.).
 - Replace `.`, `_`, `-` with spaces; collapse whitespace.
 
 ### Episode Detection (in priority order)
@@ -140,8 +141,9 @@ Parent folder name is also parsed as a fallback source for the pattern. If the i
 - Files with similar titles are grouped together.
 
 ### MediaObject Construction
-- Single file, no SxxExx → **Movie** (uses cleaned name, preserves trailing years).
+- Single file, no SxxExx → **Movie** (uses cleaned name).
 - Multiple files OR any file with SxxExx → **Show**.
+- Names are formatted for Jellyfin via `MediaGrouper.FormatMediaName`: a plausible trailing year (1900 … current year + 1) becomes `Name (Year)` (e.g. `East of Eden 2026` → `East of Eden (2026)`).
 
 ### Season Building
 - Files bucketed by season number (default to season 1 if no explicit season).
@@ -155,20 +157,20 @@ Parent folder name is also parsed as a fallback source for the pattern. If the i
 
 ### Movie
 - Path: `{root}/{Name}/{Name}.ext`
-- Example: `Interstellar.2014.mp4` → `{root}/Interstellar 2014/Interstellar 2014.mp4`
+- Example: `Interstellar.2014.mp4` → `{root}/Interstellar (2014)/Interstellar (2014).mp4`
 
 ### TV Show
-- If original filename contains the show name: `{root}/{Name}/Season {NN}/{originalFileName}.ext`
-- If show name is missing from filename: `{root}/{Name}/Season {NN}/{Name} S{NN}E{EE}.ext`
-- Example (name present): `The.Office.S02E03.Health.Care.mkv` → `{root}/The Office/Season 02/The.Office.S02E03.Health.Care.mkv`
-- Example (name missing): `S02E06-The Beauty Makes Her Move.mkv` (show: ThatTimeIGotReincarnatedAsASlime) → `{root}/ThatTimeIGotReincarnatedAsASlime/Season 02/ThatTimeIGotReincarnatedAsASlime S02E06.mkv`
+- Episode filenames are always standardized: `{root}/{Name}/Season {NN}/{Name} S{NN}E{EE}.ext`
+- Release tags and episode titles from the original filename are dropped so Jellyfin can parse the file.
+- Example: `The.Office.S02E03.Health.Care.1080p.WEB-DL.mkv` → `{root}/The Office/Season 02/The Office S02E03.mkv`
+- Example: `East of Eden 2026 S01E01 Brothers 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv` → `{root}/East of Eden (2026)/Season 01/East of Eden (2026) S01E01.mkv`
 
 ### Anime-style (trailing episode number, no SxxExx)
 - Input examples:
 	- `[SubsPlease] Jujutsu Kaisen - 56 (1080p) [0F106B43].mkv`
 	- `[Cleo]91 Days 01 (Dual Audio 10bit BD1080p x265).mkv`
 - Grouped as a show with season 1, assigned episode numbers.
-- Path: `{root}/{Show Title}/Season 01/{originalFileName}.ext`
+- Path: `{root}/{Show Title}/Season 01/{Show Title} S01E{EE}.ext`
 
 ## Move History & Idempotency (`MoveHistoryStore`)
 
@@ -189,7 +191,9 @@ Parent folder name is also parsed as a fallback source for the pattern. If the i
 	- If only one video in the group → use it.
 	- Otherwise try **SxxExx matching** (checks subtitle filename, then walks parent directory names).
 	- Fallback: **longest common prefix** of normalized names.
-4. Prefix subtitle filename with the video stem unless it already contains it.
+4. Rename the subtitle for the destination:
+	- If the subtitle carries the same SxxExx as the target video, rebuild the name as `{VideoName}.{Language}.ext` (e.g. `East of Eden (2026) S01E01.en.srt`), keeping only recognized language/variant tokens (`en`, `english`, `nl`, `forced`, `sdh`, ...).
+	- Otherwise prefix the subtitle filename with the video stem unless it already contains it.
 5. Ensure unique path, create directory, move file.
 
 ## Directory Cleanup (`DirectoryCleaner`)

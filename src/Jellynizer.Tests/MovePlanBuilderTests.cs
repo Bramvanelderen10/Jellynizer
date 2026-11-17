@@ -299,7 +299,7 @@ public class MovePlanBuilderTests : IDisposable
         // Arrange
         var testFile = "/media/Breaking.Bad.S02E05.mkv";
         var rootFolder = "/organized";
-        var expectedDestination = "/organized/Breaking Bad/Season 02/Breaking.Bad.S02E05.mkv";
+        var expectedDestination = "/organized/Breaking Bad/Season 02/Breaking Bad S02E05.mkv";
         var uniqueKey = "unique-key-456";
 
         var season = new Season(2, new List<Episode> { new(testFile, 5) });
@@ -324,13 +324,13 @@ public class MovePlanBuilderTests : IDisposable
     }
 
     [Fact]
-    public void BuildMovePlan_ShowEpisodeWithTrailingCopySuffix_StripsFromDestination()
+    public void BuildMovePlan_ShowEpisodeWithTrailingCopySuffix_StripsSuffixFromDestination()
     {
         // After a forget/re-organize cycle, the file at the destination has " (1)" baked in.
-        // The destination path must strip the trailing copy suffix so it doesn't accumulate.
+        // The standardized destination path must not carry that suffix over.
         var testFile = "/organized/Breaking Bad/Season 02/Breaking.Bad.S02E05 (1).mkv";
         var rootFolder = "/organized";
-        var expectedDestination = "/organized/Breaking Bad/Season 02/Breaking.Bad.S02E05.mkv";
+        var expectedDestination = "/organized/Breaking Bad/Season 02/Breaking Bad S02E05.mkv";
 
         var season = new Season(2, new List<Episode> { new(testFile, 5) });
         var mediaObject = new MediaObject
@@ -348,12 +348,12 @@ public class MovePlanBuilderTests : IDisposable
     }
 
     [Fact]
-    public void BuildMovePlan_ShowEpisodeWithMultipleStackedSuffixes_StripsAllFromDestination()
+    public void BuildMovePlan_ShowEpisodeWithMultipleStackedSuffixes_StripsSuffixesFromDestination()
     {
         // File has accumulated " (1) (1) (1)" from repeated forget cycles
         var testFile = "/organized/Frieren/Season 01/[SubsPlease] Frieren S2 - 03 (1080p) [7556A22B] (1) (1) (1).mkv";
         var rootFolder = "/organized";
-        var expectedDestination = "/organized/Frieren/Season 01/[SubsPlease] Frieren S2 - 03 (1080p) [7556A22B].mkv";
+        var expectedDestination = "/organized/Frieren/Season 01/Frieren S01E03.mkv";
 
         var season = new Season(1, new List<Episode> { new(testFile, 3) });
         var mediaObject = new MediaObject
@@ -449,12 +449,13 @@ public class MovePlanBuilderTests : IDisposable
     }
 
     [Fact]
-    public void BuildMovePlan_ShowFilenameAlreadyContainsShowName_PreservesOriginalFilename()
+    public void BuildMovePlan_ShowFilenameContainsReleaseTags_StandardizesFilename()
     {
-        // File already contains the show name — should keep original filename
-        var testFile = "/media/Breaking.Bad.S02E05.mkv";
+        // File already contains the show name but is full of release tags — the destination
+        // filename is standardized so Jellyfin can parse it.
+        var testFile = "/media/Breaking.Bad.S02E05.1080p.WEB-DL.x265-GROUP.mkv";
         var rootFolder = "/organized";
-        var expectedDestination = "/organized/Breaking Bad/Season 02/Breaking.Bad.S02E05.mkv";
+        var expectedDestination = "/organized/Breaking Bad/Season 02/Breaking Bad S02E05.mkv";
 
         var season = new Season(2, new List<Episode> { new(testFile, 5) });
         var mediaObject = new MediaObject
@@ -469,5 +470,39 @@ public class MovePlanBuilderTests : IDisposable
         using var assertContext = CreateAssertContext();
         var entry = assertContext.MoveHistory.Single();
         Assert.Equal(expectedDestination, entry.TargetFilePath);
+    }
+
+    [Fact]
+    public void BuildMovePlan_SceneReleaseWithEpisodeTitles_ProducesStandardizedDestinations()
+    {
+        // Real-world release: episode titles plus quality/source/codec/group tags in every filename
+        var folder = "/media/East of Eden 2026 S01 1080p NF WEB-DL DDP5.1 Atmos H264-FLUX";
+        var files = new List<string>
+        {
+            $"{folder}/East of Eden 2026 S01E01 Brothers 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv",
+            $"{folder}/East of Eden 2026 S01E02 Cathy 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv",
+            $"{folder}/East of Eden 2026 S01E03 In the Valley 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv",
+            $"{folder}/East of Eden 2026 S01E04 Kate 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv",
+            $"{folder}/East of Eden 2026 S01E05 Departure 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv",
+            $"{folder}/East of Eden 2026 S01E06 The Great Try 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv",
+            $"{folder}/East of Eden 2026 S01E07 Timshel 1080p NF WEB-DL DDP5 1 Atmos H 264-FLUX.mkv",
+        };
+        var rootFolder = "/organized";
+
+        var mediaObjects = new MediaGrouper().GroupMediaFiles(files);
+
+        _sut.BuildMovePlan(mediaObjects, rootFolder);
+
+        using var assertContext = CreateAssertContext();
+        var targets = assertContext.MoveHistory
+            .OrderBy(e => e.TargetFilePath)
+            .Select(e => e.TargetFilePath)
+            .ToList();
+
+        Assert.Equal(7, targets.Count);
+        Assert.Equal("/organized/East of Eden (2026)/Season 01/East of Eden (2026) S01E01.mkv", targets[0]);
+        Assert.Equal("/organized/East of Eden (2026)/Season 01/East of Eden (2026) S01E07.mkv", targets[6]);
+        Assert.All(targets, t => Assert.DoesNotContain("1080p", t));
+        Assert.All(targets, t => Assert.DoesNotContain("DDP5", t));
     }
 }

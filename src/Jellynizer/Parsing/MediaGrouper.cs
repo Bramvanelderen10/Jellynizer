@@ -5,8 +5,10 @@ namespace Jellynizer.Parsing;
 public class MediaGrouper
 {
     private static readonly Regex BracketPattern = new(@"\[[^\]]*\]|\([^\)]*\)", RegexOptions.Compiled);
+    private static readonly Regex BracketedYearPattern = new(@"\(\s*(?<year>(?:19|20)\d{2})\s*\)", RegexOptions.Compiled);
+    private static readonly Regex TrailingYearPattern = new(@"\s+(?<year>(?:19|20)\d{2})$", RegexOptions.Compiled);
     private static readonly Regex ResolutionPattern = new(@"\b(2160|1080|720|480|360)[pi]\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    private static readonly Regex CodecPattern = new(@"\b(x264|x265|h\.?264|h\.?265|HEVC|AVC|AAC|DTS|FLAC|10bit|8bit)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex CodecPattern = new(@"\b(x264|x265|h[\.\s]?264|h[\.\s]?265|HEVC|AVC|AAC|DTS|FLAC|10bit|8bit)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex ReleaseGroupPattern = new(@"\b(ELiTE|YIFY|BONE|AAC5|RARBG|FGT|LOL|ETTV|EZTVx?|SubsPlease|BluRay|BRRip|WEBRip|WEB[\-\.]?DL|HDRip|DVDRip|Dual\s*Audio|PROPER|REPACK|EMBER|Cleo|INTERNAL)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex VersionTagPattern = new(@"\b[Vv]\d+\b", RegexOptions.Compiled);
     private static readonly Regex SeasonEpisodePattern = new(@"\bSE?(?<season>\d{1,2})\s*E(?<episode>\d{1,4})", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -68,7 +70,7 @@ public class MediaGrouper
             var title = NormalizeSpaces(cleaned[..sdMatch.Index]);
 
             if (string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(parentFolderCleanName))
-                title = parentFolderCleanName;
+                title = ExtractTitleFromFolderName(parentFolderCleanName);
 
             return new ParsedVideoFile(filePath, title, cleaned, season, episode, parentFolderCleanName);
         }
@@ -89,17 +91,19 @@ public class MediaGrouper
 
     private string CleanName(string name)
     {
-        // 1. Remove anything inside [] or ()
-        var result = BracketPattern.Replace(name, " ");
-        // 2. Remove resolution tags (1080p, 720p, …)
+        // 1. Keep parenthesized years ("Show (2026)") so the year survives cleaning
+        var result = BracketedYearPattern.Replace(name, " ${year} ");
+        // 2. Remove anything else inside [] or ()
+        result = BracketPattern.Replace(result, " ");
+        // 3. Remove resolution tags (1080p, 720p, …)
         result = ResolutionPattern.Replace(result, " ");
-        // 3. Remove codec tags (x265, HEVC, …)
+        // 4. Remove codec tags (x265, HEVC, …)
         result = CodecPattern.Replace(result, " ");
-        // 4. Remove known release-group / source tags
+        // 5. Remove known release-group / source tags
         result = ReleaseGroupPattern.Replace(result, " ");
-        // 5. Remove version tags (V2, V3, …)
+        // 6. Remove version tags (V2, V3, …)
         result = VersionTagPattern.Replace(result, " ");
-        // 6. Normalize separators
+        // 7. Normalize separators
         result = result.Replace('.', ' ').Replace('_', ' ').Replace('-', ' ');
 
         return NormalizeSpaces(result);
@@ -147,6 +151,27 @@ public class MediaGrouper
         return folderCleanName;
     }
 
+    /// <summary>
+    /// Converts a trailing release year into Jellyfin's "Name (Year)" convention,
+    /// e.g. "East of Eden 2026" becomes "East of Eden (2026)".
+    /// Years outside a plausible range (1900 .. current year + 1) are left untouched so
+    /// titles that simply end in a number are not mangled.
+    /// </summary>
+    public static string FormatMediaName(string name)
+    {
+        var match = TrailingYearPattern.Match(name);
+        if (!match.Success)
+            return name;
+
+        var year = int.Parse(match.Groups["year"].Value);
+        var maxYear = DateTime.UtcNow.Year + 1;
+        if (year < 1900 || year > maxYear)
+            return name;
+
+        var title = name[..match.Index].TrimEnd();
+        return title.Length == 0 ? name : $"{title} ({year})";
+    }
+
     // ──────────────────────────── Pre-grouping ────────────────────────────
 
     /// <summary>
@@ -189,7 +214,7 @@ public class MediaGrouper
 
         return files.Select(f =>
             overrides.Contains(f.FilePath) && !string.IsNullOrWhiteSpace(f.ParentFolderCleanName)
-                ? f with { Title = f.ParentFolderCleanName }
+                ? f with { Title = ExtractTitleFromFolderName(f.ParentFolderCleanName!) }
                 : f
         ).ToList();
     }
@@ -282,7 +307,7 @@ public class MediaGrouper
         if (!hasSeasonEpisode && !isMultiFile)
         {
             // Use the full cleaned filename so trailing numbers stay part of the title
-            var movieName = group[0].CleanedFileName;
+            var movieName = FormatMediaName(group[0].CleanedFileName);
             return new MediaObject
             {
                 Name = movieName,
@@ -292,7 +317,7 @@ public class MediaGrouper
         }
 
         // Otherwise it's a Show
-        var canonicalName = DetermineCanonicalName(group);
+        var canonicalName = FormatMediaName(DetermineCanonicalName(group));
         var seasons = BuildSeasons(group);
 
         return new MediaObject
