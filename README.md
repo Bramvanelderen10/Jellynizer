@@ -411,6 +411,49 @@ Build:
 dotnet build src/Jellynizer/Jellynizer.csproj
 ```
 
+### Android APK builds
+
+CI builds the APK with a **pinned** Flutter version (`FLUTTER_VERSION` in
+`.github/workflows/build-and-publish.yml`). It must match the Flutter you build with locally;
+`pubspec.lock` is committed for the same reason. With `channel: stable` and no version, CI picked up
+a newer Flutter whose minimum Gradle (9.3.1) is newer than this project's wrapper (8.14) and the
+build failed with *"Your project's Gradle version (8.14.0) is lower than Flutter's minimum
+supported version"*.
+
+Current toolchain:
+
+| Component | Version | Defined in |
+|---|---|---|
+| Flutter | 3.41.4 | `FLUTTER_VERSION` in the workflow |
+| Gradle | 8.14 | `src/Jellynizer.App/android/gradle/wrapper/gradle-wrapper.properties` |
+| Android Gradle Plugin | 8.11.1 | `src/Jellynizer.App/android/settings.gradle.kts` |
+| Kotlin Gradle plugin | 2.2.20 | `src/Jellynizer.App/android/settings.gradle.kts` |
+| JDK | 17 | `setup-java` in the workflow, `compileOptions` in `app/build.gradle.kts` |
+| `receive_sharing_intent` | `>=1.8.1 <1.9.0` | `pubspec.yaml` |
+
+Why `receive_sharing_intent` is capped below 1.9.0: 1.9.0 requires Flutter 3.38+ **and AGP 9** (it
+no longer applies the Kotlin plugin itself; it relies on AGP 9's built-in Kotlin, and compiles
+against API 37). Under AGP 8 the build fails with `Could not find method kotlin()`. Under AGP 9 the
+app (and other plugins such as `shared_preferences_android`) must be migrated to built-in Kotlin,
+which needs a newer Flutter than 3.41.
+
+`android/build.gradle.kts` aligns every Android library to Java 17. Without it,
+`receive_sharing_intent` 1.8.1 (which declares no Java target) fails with *"Inconsistent JVM
+Target Compatibility Between Java and Kotlin Tasks"* (Java 1.8 vs Kotlin 17).
+
+**Upgrading later** (Flutter ≥ 3.44): bump Flutter, Gradle, AGP and Kotlin **together**, migrate to
+built-in Kotlin (remove `kotlin-android` from `app/build.gradle.kts` and the
+`org.jetbrains.kotlin.android` plugin from `settings.gradle.kts`), and drop the
+`receive_sharing_intent` cap. Flutter's templates then use Gradle 9.5.0, AGP 9.3.1 and Kotlin
+2.4.20. Minimum Gradle per AGP: 9.0 → 9.1.0, 9.1 → 9.3.1, 9.2 → 9.4.1, 9.3 → 9.5.0. Always run a
+local release build before tagging:
+
+```bash
+cd src/Jellynizer.App
+flutter pub get
+flutter build apk --release
+```
+
 ## Repo layout
 
 ```text

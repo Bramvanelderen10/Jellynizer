@@ -64,6 +64,13 @@ jobs:
 
     env:
       APP_DIR: src/Jellynizer.App
+      # Pinned on purpose. Using `channel: stable` silently floated to a Flutter release whose
+      # minimum Gradle is 9.3.1, which fails against this project's Gradle 8.14 / AGP 8.11.1
+      # wrapper ("Your project's Gradle version (8.14.0) is lower than Flutter's minimum
+      # supported version of 9.3.1"). Keep this in sync with the Flutter version used locally.
+      # Moving to a newer Flutter also requires bumping Gradle/AGP/Kotlin together - see the
+      # "Android APK builds" section in README.md.
+      FLUTTER_VERSION: "3.41.4"
 
     steps:
       - name: Checkout repository
@@ -122,6 +129,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 

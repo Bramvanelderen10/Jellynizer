@@ -239,6 +239,17 @@ Console app for verifying the organizer against a folder without running the API
 ## Testing
 
 Tests in `src/Jellynizer.Tests/` mock `IFileSystem` and `ITorrentClient` for isolated unit testing:
-- `DirectoryCleanerTests`, `MediaGrouperTests`, `MovePlanBuilderTests`
+- `DirectoryCleanerTests`, `MediaGrouperTests`, `MediaFileOrganizerTests`, `MovePlanBuilderTests`
 - `PathHelpersTests`, `SubtitleMoverTests`, `TorrentServiceTests`
 - `VideoFileFinderTests`, `VideoMoverTests`
+
+### Golden library test (`LibraryGoldenTests`)
+
+`TestData/library-map.tsv` holds 908 real-world mappings (`sourceRelativePath<TAB>expectedDestination`), taken from a messy downloads tree and the verified result of an actual organize run. Paths are relative to a synthetic root, so the test is machine independent.
+
+It asserts:
+- the show/movie/episode split (38 shows / 893 episodes / 15 movies),
+- `MovePlanBuilder.ResolveDestinationPath` output for every file,
+- that episode files follow `{Show}/Season {NN}/{Show} S{NN}E{EE}.ext` and show names carry no season marker.
+
+When naming/grouping changes on purpose, regenerate the fixture with the CLI dry run over the source tree and update the expected counts.
